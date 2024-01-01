@@ -1,0 +1,86 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+// Define constants
+#define QUATERNARY_BASE 4
+#define BUCKET_SIZE 2 // For simplicity, assuming a fixed bucket size
+
+// Define a structure for a bucket
+typedef struct {
+    int records[BUCKET_SIZE];
+    int count;
+} Bucket;
+
+// Define a structure for a directory entry
+typedef struct {
+    int localDepth;
+    Bucket *bucket;
+} DirectoryEntry;
+
+// Define a structure for the directory
+typedef struct {
+    int globalDepth;
+    DirectoryEntry *entries[QUATERNARY_BASE];
+} Directory;
+
+// Initialize directory and buckets
+Directory directory;
+Bucket buckets[QUATERNARY_BASE];
+
+// Function to initialize the directory and buckets
+void initialize() {
+    directory.globalDepth = 0;
+    for (int i = 0; i < QUATERNARY_BASE; i++) {
+        directory.entries[i] = (DirectoryEntry *)malloc(sizeof(DirectoryEntry));
+        directory.entries[i]->localDepth = 0;
+        directory.entries[i]->bucket = &buckets[i];
+        buckets[i].count = 0;
+    }
+}
+
+// Function to compute the hash of a key
+int hash(int key, int depth) {
+    return (key >> depth) & (QUATERNARY_BASE - 1);
+}
+
+// Function to insert a record into the hash table
+void insertRecord(int key) {
+    int hashValue = hash(key, directory.globalDepth);
+
+    if (buckets[hashValue].count < BUCKET_SIZE) {
+        // Insert into the bucket if there is space
+        buckets[hashValue].records[buckets[hashValue].count++] = key;
+    } else {
+        // Split the bucket if it is full
+        // (Implementation of bucket splitting is omitted for simplicity)
+    }
+}
+
+// Function to search for a record in the hash table
+int searchRecord(int key) {
+    int hashValue = hash(key, directory.globalDepth);
+
+    // Search for the record in the bucket
+    for (int i = 0; i < buckets[hashValue].count; i++) {
+        if (buckets[hashValue].records[i] == key) {
+            return 1; // Found
+        }
+    }
+
+    return 0; // Not found
+}
+
+// Main function
+int main() {
+    initialize();
+
+    // Insert some records
+    insertRecord(10);
+    insertRecord(5);
+    insertRecord(15);
+
+    // Search for records
+    printf("Search for 5: %s\n", searchRecord(5) ? "Found" : "Not Found");
+    printf("Search for 20: %s\n", searchRecord(20) ? "Found" : "Not Found");
+    return 0;}
